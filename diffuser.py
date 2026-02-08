@@ -84,10 +84,12 @@ class Diffuser:
         for i in range(self.amt_steps):
             self.steps[i].configure(dl_ranges_ms[i])
 
-    def process(self, sample: NDArray) -> NDArray:
+    def process(self, sample: NDArray) -> tuple[NDArray, NDArray]:
+        early_reflections = np.zeros_like(sample)
         for step in self.steps:
             sample = step.process(sample)
-        return sample
+            early_reflections += sample
+        return sample, early_reflections
        
 
 if __name__ == "__main__":
@@ -103,10 +105,10 @@ if __name__ == "__main__":
     imp = 5 * np.ones(8, dtype=np.float32)
     imp_len = 1
     for i in range(imp_len):
-        output[i] = diff.process(imp).mean()
+        output[i] = diff.process(imp)[0].mean()
 
     silence = np.zeros(8, dtype=np.float32)
     for i in range(imp_len, output_len):
-        output[i] = diff.process(silence).mean()
+        output[i] = diff.process(silence)[0].mean()
 
     write("test.wav", fs, output)

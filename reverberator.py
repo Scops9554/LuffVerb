@@ -1,6 +1,7 @@
 from numpy.typing import NDArray
 import numpy as np
 from diffuser import Diffuser
+from delayLine import DelayLine
 from feedbackDelayNetwork import FND
 
 
@@ -12,12 +13,17 @@ class Reverberator:
         self.diff = Diffuser(channels, amt_steps, fs)
         self.fnd = FND(channels, g, a, fs)
 
-    def configure(self, dl_lengths: list[int], dl_ms_ranges: list[int]) -> None:
+        self.early_dl = DelayLine(amt_steps + 1)
+
+    def configure(self, dl_lengths: list[int], dl_ms_ranges: list[int], er_samples: int) -> None:
         self.fnd.configure(dl_lengths)
         self.diff.configure(dl_ms_ranges)
+        self.early_dl.configure(er_samples)
 
     def process(self, sample: np.float32) -> np.float32:
-        input = np.full(self.channels, sample)
-        input = self.diff.process(input)
-        return self.fnd.process(input).mean()
+        inp = np.full(self.channels, sample)
+        inp, er_in = self.diff.process(inp)
+        er_out = self.early_dl.read()
+        self.early_dl.write(er_in.mean())
+        return self.fnd.process(inp).mean() + er_out
 
