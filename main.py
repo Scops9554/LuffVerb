@@ -12,7 +12,7 @@ fs = 44100
 channels = 8
 diff_steps = 4
 g = 0.85
-a = 0.15
+a = 0.3
 
 reverbr = Reverberator(channels, g, a, diff_steps, fs)
 
@@ -40,10 +40,10 @@ mfp_dl_ms_ranges = [58, 60, 67, 70]
 
 er_ms = 29 - int(min(mfp_dl_ms_ranges) / (2 * channels))
 er_samples = int(er_ms * fs / 1000)
-reverbr.configure(mfp_dl_lengths, mfp_dl_ms_ranges, er_samples)
+reverbr.configure(combo_dl_lengths, mfp_dl_ms_ranges, er_samples)
 
 def main():
-    fs, audio = read("guitar.wav")
+    fs, audio = read(" clap.wav")
 
     # Convert to float32
     if audio.dtype != np.float32:
@@ -61,10 +61,10 @@ def main():
         output[i] = reverbr.process(audio[i])
 
     print("writing")
-    write("mfp_diff_mfp_fnd_wet.wav", fs, output / 2)
+    write("wet.wav", fs, output / 2)
 
     perc_wet = 0.35
-    write("mfp_diff_mfp_fnd_mixed.wav", fs, (audio * (1 - perc_wet) + output * perc_wet) / 2)
+    write("mixed.wav", fs, (audio * (1 - perc_wet) + output * perc_wet) / 2)
 
 
 
